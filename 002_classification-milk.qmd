@@ -31,7 +31,7 @@ library(rpart.plot)
 
 ```{r}
 # Load Data
-df <- read_csv("data/milk.csv")
+df <- read_csv("data/milk.csv") 
 ```
 
 ```{r}
@@ -201,13 +201,12 @@ df_new <- tibble(
   odor = factor(1), 
   fat = factor(1),
   turbidity = factor(1),
-  colour = 246,
-  grade = factor("high")
+  colour = 246
 )
 ```
 
 ```{r}
 # Predict the New Data
-model_nb %>%
+model_dt %>%
   predict(df_new) 
 ```

@@ -27,6 +27,9 @@ library(nnet)
 ### Load Data
 
 ```{r}
+# Load Packages
+library(tidyverse)
+
 # Load Data
 df <- read_csv("data/wine.csv")
 ```

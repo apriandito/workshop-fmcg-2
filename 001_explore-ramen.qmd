@@ -94,9 +94,9 @@ df %>%
 ```
 
 ```{r}
-# Top Style in Singapore and Japan
+# Top Style in Singapore and India
 df %>% 
-  filter(country == "Singapore" | country == "India") %>% 
+  filter(country == "Indonesia" | country == "Japan") %>% 
   group_by(country, style) %>% 
   summarise(avg_stars = mean(stars)) %>% 
   ggplot(aes(x = reorder(style, -avg_stars) , y = avg_stars, fill = country)) +
