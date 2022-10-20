@@ -31,7 +31,7 @@ library(rpart.plot)
 
 ```{r}
 # Load Data
-df <- read_csv("data/milk.csv") 
+df <- read_csv("data/milk-3.csv")
 ```
 
 ```{r}
@@ -188,6 +188,11 @@ model_nb %>%
   predict(testing(df_split)) %>%
   bind_cols(testing(df_split)) %>%
   multi_metrics(truth = grade, estimate = .pred_class)
+```
+
+```{r}
+# ROC Curve 
+autoplot(roc_curve(bind_cols(predict(model_nb, testing(df_split), type = "prob"), testing(df_split)), grade, .pred_0))
 ```
 
 #### Make Prediction
