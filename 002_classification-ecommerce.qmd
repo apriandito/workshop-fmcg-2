@@ -1,0 +1,200 @@
+---
+title: "Classification - Ecommerce"
+author: "Muhammad Apriandito"
+format: html
+editor: visual
+---
+
+### Setup
+
+```{r}
+# Set Parameter
+set.seed(123)
+options(scipen = 10000)
+```
+
+### Load Packages
+
+```{r}
+# Load Packages
+library(tidyverse)
+library(tidymodels)
+library(skimr)
+library(janitor)
+library(discrim)
+library(naivebayes)
+library(rpart)
+library(rpart.plot)
+```
+
+### Load Data
+
+```{r}
+# Load Data
+df <- read_csv("data/e-commerce.csv")
+```
+
+```{r}
+# Show Data
+df
+```
+
+```{r}
+# Show Sample Value for Each Variables
+glimpse(df)
+```
+
+```{r}
+# Show Data Summary
+skim(df)
+```
+
+### Data Preprocessing
+
+```{r}
+# Data Preprocessing
+df_fix <- df %>%
+  mutate(reached_on_time =  as_factor(reached_on_time)) %>%
+  mutate_if(is.character, as_factor)
+```
+
+```{r}
+# Show Processed Data
+glimpse(df_fix)
+```
+
+### Data Exploration
+
+```{r}
+# Show the Distribution of Packages Reached on Time
+df_fix %>% 
+  group_by(reached_on_time) %>%
+  count() %>%
+  ggplot(aes(x = reached_on_time, y = n, fill = reached_on_time)) +
+  geom_col() +
+  theme_minimal()
+```
+
+```{r}
+# Show the Distribution of Packages Reached on Time Based on Mode of Shipment
+df_fix %>% 
+  group_by(reached_on_time, mode_of_shipment) %>%
+  count() %>%
+  ggplot(aes(x = mode_of_shipment, y = n, fill = reached_on_time)) +
+  geom_col(position = "dodge")  +
+  theme_minimal()
+```
+
+### Construct the Classification Model
+
+#### Data Split
+
+```{r}
+# Split Data into 70% Training Data and 30% Testing Data 
+df_split <- initial_split(df_fix, prop = 0.7)
+```
+
+```{r}
+# Show Data Proportion
+df_split
+```
+
+#### Define Data Processing Flow
+
+```{r}
+# Define Data Processing Flow
+df_recipe <- training(df_split) %>%
+  recipe(reached_on_time ~ weight_in_gms + warehouse_block + discount_offered) 
+df_recipe
+```
+
+#### Modeling
+
+Check available models at <https://www.tidymodels.org/find/parsnip/>
+
+##### Decision Tree
+
+```{r}
+# Define the Machine Learning Algorithm - Decision Tree
+dt <- decision_tree() %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+```
+
+```{r}
+# Create Model Workflow
+workflow_dt <- workflow() %>%
+  add_model(dt) %>%
+  add_recipe(df_recipe)
+```
+
+```{r}
+# Train Model
+model_dt <- fit(workflow_dt, training(df_split))
+model_dt
+```
+
+```{r}
+# Visualize the Decision Tree
+tree_fit <- model_dt %>%
+  extract_fit_parsnip()
+rpart.plot(tree_fit$fit, roundint=FALSE)
+```
+
+##### Naive Bayes
+
+```{r}
+nb <-  naive_Bayes() %>% 
+  set_engine("naivebayes")
+```
+
+```{r}
+workflow_nb <- workflow() %>%
+  add_model(nb) %>%
+  add_recipe(df_recipe)
+```
+
+```{r}
+model_nb <- fit(workflow_nb, training(df_split))
+model_nb
+```
+
+#### Model Evaluation
+
+```{r}
+# Define Metrics to Evaluate the Model
+multi_metrics <- metric_set(accuracy, precision, recall, specificity, f_meas)
+```
+
+```{r}
+# Measure Model Performance
+model_dt %>%
+  predict(testing(df_split)) %>%
+  bind_cols(testing(df_split)) %>%
+  multi_metrics(truth = reached_on_time, estimate = .pred_class)
+```
+
+```{r}
+# Measure Model Performance
+model_nb %>%
+  predict(testing(df_split)) %>%
+  bind_cols(testing(df_split)) %>%
+  multi_metrics(truth = reached_on_time, estimate = .pred_class)
+```
+
+#### Make Prediction
+
+```{r}
+# Create a New Data
+df_new <- tibble(
+  weight_in_gms = 5000, 
+  discount_offered = 9, 
+  warehouse_block = "B"
+)
+```
+
+```{r}
+# Predict the New Data
+model_nb %>%
+  predict(df_new) 
+```

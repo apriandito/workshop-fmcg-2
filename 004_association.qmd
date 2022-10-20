@@ -1,0 +1,87 @@
+---
+title: "Association"
+author: "Muhammad Apriandito"
+format: html
+editor: visual
+---
+
+### Setup
+
+```{r}
+# Set Parameter
+set.seed(123)
+options(scipen = 10000)
+```
+
+#### Load Packages
+
+```{r}
+# Load Libraries
+library(tidyverse)
+library(skimr)
+library(janitor)
+library(arules)
+library(arulesViz)
+```
+
+#### Load Data
+
+```{r}
+# Load Data
+df <- read_csv("data/online-retail.csv") 
+```
+
+```{r}
+# Show Data
+head(df)
+```
+
+```{r}
+# Show Sample Value for Each Variables
+glimpse(df)
+```
+
+```{r}
+# Show Data Summary
+skim(df)
+```
+
+#### Data Preprocessing
+
+```{r}
+# Split and Filter the Data
+invoice_split <- df %>%
+  filter(country == "United Kingdom") %>%
+  filter(str_detect(invoice_no, regex("C\\d+"), negate = TRUE)) %>%
+  filter(quantity > 1) %>%
+  drop_na() %>%
+  group_split(invoice_no)
+```
+
+```{r}
+# Create Set of Unique Item 
+item_transaction <- map(invoice_split, function(x) unique(x$description))
+```
+
+#### Modeling the Association Rules
+
+```{r}
+# Apply Apriori Algorithm to the Data
+rules <- apriori(item_transaction,parameter = list(supp = 0.01))
+```
+
+```{r}
+# Show the First Six Rules
+inspect(head(rules))
+```
+
+```{r}
+# Get 10 Rules with the Highest Confidence Value
+highconfidence <- head(sort(rules, by = "confidence"), 5)
+inspect(highconfidence)
+```
+
+```{r}
+# Visualize the Rules
+plot(highconfidence, method = "graph")
+```

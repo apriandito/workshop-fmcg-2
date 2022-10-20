@@ -1,0 +1,114 @@
+---
+title: "Classification - Ramen Exploration"
+author: "Muhammad Apriandito"
+format: html
+editor: visual
+---
+
+### Setup
+
+```{r}
+# Set Parameter
+set.seed(123)
+options(scipen = 10000)
+```
+
+### Load Packages
+
+```{r}
+# Load Packages
+library(tidyverse)
+library(skimr)
+library(treemapify)
+```
+
+### Load Data
+
+```{r}
+# Load Data
+df <- read_csv("data/ramen-ratings.csv")
+```
+
+```{r}
+# Show Data
+df
+```
+
+```{r}
+# Show Sample Value for Each Variables
+glimpse(df)
+```
+
+```{r}
+# Show Data Summary
+skim(df)
+```
+
+### Data Exploration
+
+```{r}
+# Number of Brand in Each Country
+df %>% 
+  group_by(country) %>% 
+  count() %>% 
+  ggplot(aes(x = reorder(country, n) , y = n, fill = n)) +
+  geom_col() +
+  coord_flip() +
+  theme_minimal()
+```
+
+```{r}
+# Get Average Stars / Rating for Each Country
+df %>% 
+  group_by(country) %>% 
+  summarise(avg_stars = mean(stars)) %>% 
+  ggplot(aes(x = reorder(country, avg_stars) , y = avg_stars, fill = avg_stars)) +
+  geom_col() +
+  coord_flip() +
+  theme_minimal()
+```
+
+```{r}
+# Get Average Stars / Rating for Each Style
+df %>% 
+  group_by(style) %>% 
+  summarise(avg_stars = mean(stars)) %>% 
+  ggplot(aes(x = reorder(style, -avg_stars) , y = avg_stars, fill = avg_stars)) +
+  geom_col() +
+  coord_polar() +
+  theme_minimal() 
+```
+
+```{r}
+# Top Brand in Indonesia
+df %>% 
+  filter(country == "Indonesia") %>% 
+  group_by(brand) %>% 
+  summarise(avg_stars = mean(stars)) %>% 
+  ggplot(aes(area = avg_stars , label = brand, fill = avg_stars)) +
+  geom_treemap() +
+  geom_treemap_text(colour = "white",
+                    place = "centre",
+                    size = 15) +
+  theme(legend.position = "none")
+```
+
+```{r}
+# Top Style in Singapore and Japan
+df %>% 
+  filter(country == "Singapore" | country == "India") %>% 
+  group_by(country, style) %>% 
+  summarise(avg_stars = mean(stars)) %>% 
+  ggplot(aes(x = reorder(style, -avg_stars) , y = avg_stars, fill = country)) +
+  geom_col(position = "dodge") +
+  theme_minimal()
+```
+
+```{r}
+# Correlation Between Rating and Number of Review
+df %>% 
+  group_by(brand, country) %>% 
+  summarise(avg_stars = mean(stars), no_review = n())  %>% 
+  ggplot(aes(x = avg_stars, y = no_review, color = country)) +
+  geom_point()
+```

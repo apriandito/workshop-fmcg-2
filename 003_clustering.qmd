@@ -1,0 +1,83 @@
+---
+title: "Clustering"
+author: "Muhammad Apriandito"
+format: html
+editor: visual
+---
+
+### Setup
+
+```{r}
+# Set Parameter
+set.seed(123)
+options(scipen = 10000)
+```
+
+### Load Packages
+
+```{r}
+# Load Packages
+library(tidyverse)
+library(skimr)
+library(factoextra)
+```
+
+### Load Data
+
+```{r}
+# Load Data
+df <- read_csv("data/nutrition.csv")  %>%
+  sample_n(1000)
+```
+
+```{r}
+# Show Data
+df
+```
+
+```{r}
+# Show Sample Value for Each Variables
+glimpse(df)
+```
+
+```{r}
+# Show Data Summary
+skim(df)
+```
+
+### Construct the Clustering Model
+
+#### Data Selection
+
+```{r}
+# Select the Relevant Data
+df_cluster <- df %>%
+  select(calories, cholesterol, total_fat, caffeine) %>%
+  mutate_all(scale) 
+head(df_cluster)
+```
+
+#### Search for the Optimal Number of Clusters
+
+```{r}
+# Elbow Method
+fviz_nbclust(df_cluster, kmeans, method = "wss")
+```
+
+```{r}
+# Silhouette Method
+fviz_nbclust(df_cluster, kmeans, method = "silhouette")
+```
+
+#### Construct the Clustering Model
+
+```{r}
+# Train Model
+cluster <- kmeans(df_cluster, centers = 2)
+cluster
+```
+
+```{r}
+# Visualize the Clustering Result
+fviz_cluster(cluster, data = df_cluster, geom = "point")
+```
